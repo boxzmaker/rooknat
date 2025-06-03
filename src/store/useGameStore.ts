@@ -85,7 +85,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   
   setGameMode: (mode: GameMode) => set({ 
     gameMode: mode,
-    isPlayerTurn: mode === 'playerVsAi' && get().gameState.turn === 'w'
+    isPlayerTurn: get().gameState.turn === 'w' // Player is always white
   }),
   
   setWhiteAiModel: (model: ModelType) => set({ 
@@ -107,12 +107,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
       dialogHistory: [],
       pendingMove: false,
       isPlayerTurn: true, // Player always starts as white
-      gameMode: 'playerVsAi' // Ensure player vs AI mode
+      gameMode: 'playerVsAi' // Force player vs AI mode
     });
   },
   
   makeMove: async (move: ChessMove) => {
-    const { chess, gameState, gameMode } = get();
+    const { chess, gameState } = get();
     
     try {
       // Attempt the move
@@ -133,19 +133,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
         moveCount: gameState.moveCount + 1
       };
       
-      const currentColor = updatedGameState.turn === 'w' ? 'b' : 'w';
-      const isPlayerColor = currentColor === 'w'; // Player is always white
+      const isWhiteTurn = updatedGameState.turn === 'w';
       
       set({ 
         gameState: updatedGameState,
-        isPlayerTurn: isPlayerColor,
+        isPlayerTurn: isWhiteTurn, // Player is white, AI is black
       });
       
       // If game is over, add a system message
       if (updatedGameState.status === 'ended') {
         let resultMessage = "Game over! ";
         if (updatedGameState.isCheckmate) {
-          resultMessage += `${currentColor === 'w' ? 'Black' : 'White'} wins by checkmate!`;
+          resultMessage += `${isWhiteTurn ? 'Black' : 'White'} wins by checkmate!`;
         } else if (updatedGameState.isDraw) {
           resultMessage += "The game is a draw.";
         } else if (updatedGameState.isStalemate) {
@@ -156,7 +155,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }
       
       // Request AI move if it's black's turn
-      if (!isPlayerColor) {
+      if (!isWhiteTurn) {
         get().requestAiMove();
       }
       
@@ -234,15 +233,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setAiVsAiSpeed: (speed) => set({ aiVsAiSpeed: speed }),
   
   toggleAiVsAiPaused: () => {
-    const { aiVsAiPaused, gameState, gameMode } = get();
-    const newPausedState = !aiVsAiPaused;
-    
-    set({ aiVsAiPaused: newPausedState });
-    
-    // If unpausing, and it's AI vs AI mode, and the game is not over
-    if (!newPausedState && gameMode === 'aiVsAi' && gameState.status === 'playing') {
-      get().requestAiMove();
-    }
+    const { aiVsAiPaused, gameState } = get();
+    set({ aiVsAiPaused: !aiVsAiPaused });
   },
   
   resetGame: () => {
