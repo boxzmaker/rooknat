@@ -216,11 +216,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
         );
       }
       
-      // Make the AI's move
+      // Make the AI's move if valid, otherwise notify the user
       if (move) {
         await get().makeMove(move);
       } else {
-        throw new Error('Invalid or no move returned from AI');
+        get().addDialogMessage('system', 'The AI failed to make a valid move. Please try again or start a new game.');
       }
       
     } catch (error) {

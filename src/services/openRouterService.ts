@@ -24,12 +24,12 @@ const parseAiResponse = (content: string, chess: Chess): { move: ChessMove | nul
     }
     
     try {
-      // Use the provided chess instance to validate and parse the move
-      const moveObj = chess.move(movePart, { sloppy: true });
+      // Create a temporary chess instance for move validation
+      const tempChess = new Chess(chess.fen());
+      
+      // Use the temporary chess instance to validate and parse the move
+      const moveObj = tempChess.move(movePart, { sloppy: true });
       if (moveObj) {
-        // Undo the move since we're just validating
-        chess.undo();
-        
         result.move = {
           from: moveObj.from,
           to: moveObj.to,
