@@ -84,7 +84,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setApiKey: (key: string) => set({ apiKey: key }),
   
   setGameMode: (mode: GameMode) => set({ 
-    gameMode: mode, 
+    gameMode: mode,
     isPlayerTurn: mode === 'playerVsAi' && get().gameState.turn === 'w'
   }),
   
@@ -106,15 +106,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       },
       dialogHistory: [],
       pendingMove: false,
-      isPlayerTurn: get().gameMode === 'playerVsAi',
+      isPlayerTurn: true, // Player always starts as white
+      gameMode: 'playerVsAi' // Ensure player vs AI mode
     });
-    
-    // If AI vs AI, start with white's move
-    if (get().gameMode === 'aiVsAi' && !get().aiVsAiPaused) {
-      setTimeout(() => {
-        get().requestAiMove();
-      }, 1000);
-    }
   },
   
   makeMove: async (move: ChessMove) => {
@@ -140,7 +134,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       };
       
       const currentColor = updatedGameState.turn === 'w' ? 'b' : 'w';
-      const isPlayerColor = gameMode === 'playerVsAi' && currentColor === 'w';
+      const isPlayerColor = currentColor === 'w'; // Player is always white
       
       set({ 
         gameState: updatedGameState,
@@ -161,15 +155,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
         return;
       }
       
-      // If it's AI's turn next in player vs AI mode, or it's AI vs AI mode
-      if ((gameMode === 'playerVsAi' && !isPlayerColor) || gameMode === 'aiVsAi') {
-        if (gameMode === 'aiVsAi' && !get().aiVsAiPaused) {
-          setTimeout(() => {
-            get().requestAiMove();
-          }, get().aiVsAiSpeed);
-        } else if (gameMode === 'playerVsAi') {
-          get().requestAiMove();
-        }
+      // Request AI move if it's black's turn
+      if (!isPlayerColor) {
+        get().requestAiMove();
       }
       
     } catch (error) {
@@ -263,7 +251,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       gameState: getDefaultGameState(),
       dialogHistory: [],
       pendingMove: false,
-      isPlayerTurn: true
+      isPlayerTurn: true,
+      gameMode: 'playerVsAi'
     });
   }
 }));
